@@ -1,5 +1,5 @@
-from visitor import Worker
-from pylab import *
+from abstract_work import Worker
+from matplotlib.pylab import *
 
 
 class Plotter(Worker):
@@ -25,4 +25,4 @@ class Plotter(Worker):
                 case _:
                     plot(self._x_data[i], self._y_data[i],
                          legend=visitor.legends[i])
-        savefig(visitor.file_name)
+        savefig(visitor.file_name_to_write_data)
