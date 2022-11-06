@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from pydantic import BaseModel
+from pydantic import BaseModel, validate_arguments
 import numpy
 
 
@@ -22,7 +22,9 @@ class Visitor(BaseModel):
     _y_label: str
     _types: list[str]
     _file_name: str
+    _current_predicted_y_data: numpy.ndarray
 
+    @validate_arguments
     def visit(self, obj: Worker) -> None:
         obj.accept(self)
 
@@ -63,5 +65,13 @@ class Visitor(BaseModel):
         return self._file_name
 
     @file_name_to_write_data.setter
-    def file_name_to_write_data(self, val):
+    def file_name_to_write_data(self, val: str):
         self._file_name = val
+
+    @property
+    def current_predicted_y_data(self):
+        return self._current_predicted_y_data
+
+    @current_predicted_y_data.setter
+    def current_predicted_y_data(self, value: numpy.ndarray):
+        self._current_predicted_y_data = value

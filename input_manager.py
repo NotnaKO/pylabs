@@ -1,6 +1,6 @@
 import numpy
 
-from abstract_work import Worker
+from abstract_work import Worker, Visitor
 from pydantic import validate_arguments
 from os.path import exists
 
@@ -32,36 +32,46 @@ class InputManager(Worker):
                  legend_line: int = None, x_label_line: int = None,
                  y_label_line: int = None,
                  file_name_to_write_line: int = None):
+        self.read_data(input_type, input_file_name, input_data_type, separator,
+                       legend_line, x_label_line, y_label_line,
+                       file_name_to_write_line)
+
+    @validate_arguments
+    def read_data(self, input_type: str = "stdin", input_file_name: str = '',
+                  input_data_type=float, separator: str = ' ',
+                  legend_line: int = None, x_label_line: int = None,
+                  y_label_line: int = None,
+                  file_name_to_write_line: int = None):
         match input_type:
             case "stdin":
                 self._x_data = list(map(input_data_type, input("""Введите 
-                данные по x: \n
-                """)))
+                        данные по x: \n
+                        """)))
                 self._y_data = list(map(input_data_type, input("""Введите 
-                данные по у: \n
-                """)))
+                        данные по у: \n
+                        """)))
                 if legend_line is not None:
                     self._legend = input("""Введите название функции(пустую 
-                    строку, если её нет) \n
-                    """)
+                            строку, если её нет) \n
+                            """)
                     if self._legend == '':
                         self._legend = None
                 if x_label_line is not None:
                     self._x_label = input("""Введите название название оси 
-                    абсцисс(пустую строку, если её нет) \n
-                    """)
+                            абсцисс(пустую строку, если её нет) \n
+                            """)
                     if self._x_label == '':
                         self._x_label = None
                 if y_label_line is not None:
                     self._y_label = input("""Введите название оси ординат(
-                    пустую строку, если её нет) \n
-                    """)
+                            пустую строку, если её нет) \n
+                            """)
                     if self._y_label == '':
                         self._y_label = None
                 if file_name_to_write_line is not None:
                     self._file_name_to_write = input("""Введите название файла 
-                    для записи(пустую строку, если её нет) \n
-                    """)
+                            для записи(пустую строку, если её нет) \n
+                            """)
                     if self._file_name_to_write == '':
                         self._file_name_to_write = None
             case ".txt":
@@ -81,7 +91,8 @@ class InputManager(Worker):
                 if file_name_to_write_line is not None:
                     self._file_name_to_write = lines[file_name_to_write_line]
 
-    def accept(self, visitor) -> None:
+    @validate_arguments
+    def accept(self, visitor: Visitor) -> None:
         x, y = visitor.data
         x.append(numpy.ndarray(self._x_data))
         y.append(numpy.ndarray(self._y_data))

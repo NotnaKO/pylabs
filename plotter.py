@@ -1,4 +1,4 @@
-from abstract_work import Worker
+from abstract_work import Worker, Visitor
 from matplotlib.pylab import *
 
 
@@ -9,7 +9,7 @@ class Plotter(Worker):
         self._x_data = []
         self._y_data = []
 
-    def accept(self, visitor) -> None:
+    def accept(self, visitor: Visitor) -> None:
         self._x_data, self._y_data = visitor.data
         self._x_label, self._y_label = visitor.labels
         for i in range(len(self._x_data)):
