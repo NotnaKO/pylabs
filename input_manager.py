@@ -1,8 +1,8 @@
 import numpy
 
-from abstract_work import Worker, Visitor
-from pydantic import validate_arguments
+from abstract_work import Worker
 from os.path import exists
+from pydantic import validate_arguments
 
 
 class InputManager(Worker):
@@ -10,13 +10,18 @@ class InputManager(Worker):
     Visitor"""
 
     _x_data = []
+    _x_range = None
     _y_data = []
     _legend = []
     _x_label = None
     _y_label = None
     _type = None
+    _type_of_interpolation = None
     _file_name = None
-    _file_name_to_write = None
+    _file_name_to_save_figure = None
+    _show = True
+    _input_data_type = float
+    _degree = None
 
     @staticmethod
     def _find_file(path: str, extension: str):
@@ -27,53 +32,75 @@ class InputManager(Worker):
         raise FileNotFoundError("No such file in directory")
 
     @validate_arguments
-    def __init__(self, input_type: str = "stdin", input_file_name: str = '',
-                 input_data_type=float, separator: str = ' ',
-                 legend_line: int = None, x_label_line: int = None,
-                 y_label_line: int = None,
-                 file_name_to_write_line: int = None):
-        self.read_data(input_type, input_file_name, input_data_type, separator,
-                       legend_line, x_label_line, y_label_line,
-                       file_name_to_write_line)
+    def __init__(self, *args, input_type: str | None = None,
+                 input_file_name: str | None = None, input_data_type=float,
+                 separator: str | None = None, show: bool = True, **kwargs):
+        self.read_data(*args, input_type=input_type,
+                       input_file_name=input_file_name,
+                       input_data_type=input_data_type, separator=separator,
+                       show=show, **kwargs)
 
-    @validate_arguments
-    def read_data(self, input_type: str = "stdin", input_file_name: str = '',
-                  input_data_type=float, separator: str = ' ',
-                  legend_line: int = None, x_label_line: int = None,
-                  y_label_line: int = None,
-                  file_name_to_write_line: int = None):
+    def _fill_argument(self, key, value):
+        match key:
+            case "legend":
+                self._legend = value
+            case "x_label":
+                self._x_label = value
+            case "y_label":
+                self._y_label = value
+            case "file_name_to_save_figure":
+                self._file_name_to_save_figure = value
+            case "type":
+                self._type = value
+            case "input_data_type":
+                self._input_data_type = value
+            case "x_range":
+                self._x_range = value
+            case "degree":
+                self._degree = value
+            case "type_of_interpolation":
+                if value.lower() not in {"any", "linear", "polynomial", None}:
+                    raise ValueError("Type of interpolation may be only "
+                                     "\"any\", \"linear\", \"polynomial\" "
+                                     "or None")
+                self._type_of_interpolation = value
+            case _:
+                raise AttributeError(f"Pylab has not "
+                                     f"got attribute \"{key}\". Allowed "
+                                     f"attributes: legend, x_label, y_label, "
+                                     f"file_name_to_plot, "
+                                     f"type_of_interpolation, type and "
+                                     f"input_data_type")
+
+    def read_data(self, *args, input_type: str, input_file_name: str,
+                  input_data_type, separator: str, show: bool, **kwargs):
+        self._show = show
         match input_type:
             case "stdin":
-                self._x_data = list(map(input_data_type, input("""Введите 
-                        данные по x: \n
-                        """)))
-                self._y_data = list(map(input_data_type, input("""Введите 
-                        данные по у: \n
-                        """)))
-                if legend_line is not None:
-                    self._legend = input("""Введите название функции(пустую 
-                            строку, если её нет) \n
-                            """)
-                    if self._legend == '':
-                        self._legend = None
-                if x_label_line is not None:
-                    self._x_label = input("""Введите название название оси 
-                            абсцисс(пустую строку, если её нет) \n
-                            """)
-                    if self._x_label == '':
-                        self._x_label = None
-                if y_label_line is not None:
-                    self._y_label = input("""Введите название оси ординат(
-                            пустую строку, если её нет) \n
-                            """)
-                    if self._y_label == '':
-                        self._y_label = None
-                if file_name_to_write_line is not None:
-                    self._file_name_to_write = input("""Введите название файла 
-                            для записи(пустую строку, если её нет) \n
-                            """)
-                    if self._file_name_to_write == '':
-                        self._file_name_to_write = None
+                self._x_data = list(
+                    map(input_data_type, input("Введите данные по x: \n")))
+                self._y_data = list(
+                    map(input_data_type, input("Введите данные по у: \n")))
+
+                self._legend = input("Введите название функции(пустую "
+                                     "строку, если её нет) \n")
+                if self._legend == '':
+                    self._legend = None
+                self._x_label = input(
+                    "Введите название название оси абсцисс(пустую строку, "
+                    "если её нет) \n")
+                if self._x_label == '':
+                    self._x_label = None
+                self._y_label = input(
+                    "Введите название оси ординат(пустую строку, если её "
+                    "нет) \n")
+                if self._y_label == '':
+                    self._y_label = None
+                self._file_name_to_save_figure = input(
+                    "Введите название файла  для записи(пустую строку, "
+                    "если её нет) \n")
+                if self._file_name_to_save_figure == '':
+                    self._file_name_to_save_figure = None
             case ".txt":
                 input_file_name = self._find_file(input_file_name, '.txt')
                 with open(input_file_name) as f:
@@ -82,24 +109,25 @@ class InputManager(Worker):
                     map(input_data_type, lines[0].split(separator)))
                 self._y_data = list(
                     map(input_data_type, lines[1].split(separator)))
-                if legend_line is not None:
-                    self._legend = lines[legend_line]
-                if x_label_line is not None:
-                    self._x_label = lines[x_label_line]
-                if y_label_line is not None:
-                    self._y_label = lines[y_label_line]
-                if file_name_to_write_line is not None:
-                    self._file_name_to_write = lines[file_name_to_write_line]
+                for i in lines[2:]:
+                    cmd, value = i.split(':')
+                    self._fill_argument(cmd, value)
+            case _:
+                self._x_data = args[0]
+                self._y_data = args[1]
+                for key, value in kwargs.items():
+                    self._fill_argument(key, value)
 
-    @validate_arguments
-    def accept(self, visitor: Visitor) -> None:
+    def accept(self, visitor) -> None:
         x, y = visitor.data
-        x.append(numpy.ndarray(self._x_data))
-        y.append(numpy.ndarray(self._y_data))
+        x.append(numpy.array(self._x_data, dtype=self._input_data_type))
+        y.append(numpy.array(self._y_data, dtype=self._input_data_type))
         visitor.legends.append(self._legend)
-        x, y = visitor.labels
-        x.append(self._x_label)
-        y.append(self._y_label)
+        visitor.labels = (self._x_label, self._y_label)
         visitor.types.append(self._type)
-        if self._file_name_to_write is not None:
-            visitor.file_name_to_write_data = self._file_name_to_write
+        visitor.show = self._show
+        visitor.types_of_interpolation.append(self._type_of_interpolation)
+        visitor.x_ranges.append(self._x_range)
+        visitor.degrees.append(self._degree)
+        if self._file_name_to_save_figure is not None:
+            visitor.file_name_to_write_data = self._file_name_to_save_figure
