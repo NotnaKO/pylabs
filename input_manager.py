@@ -103,8 +103,9 @@ class InputManager(Worker):
                     "если её нет) \n")
                 if self._file_name_to_save_figure == '':
                     self._file_name_to_save_figure = None
-                self._type_of_interpolation = input("Введите тип интерполяции(возможные типы: "
-                                                    f"{', '.join(self._types_of_interpolations)})\n")
+                s = f"Введите тип интерполяции(возможные типы: " \
+                    f"{', '.join(self._types_of_interpolations)})\n"
+                self._type_of_interpolation = input(s)
                 if self._type_of_interpolation == "None":
                     self._type_of_interpolation = None
                 if self._type_of_interpolation not in self._types_of_interpolations:

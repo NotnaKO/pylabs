@@ -6,6 +6,7 @@ from plotter import Plotter
 
 class Pylab:
     """Класс для работы с пользователем"""
+
     def __init__(self, *args, **kwargs):
         """Функция создаёт график по параметрам"""
         self.__visitor = Visitor()
@@ -21,4 +22,3 @@ class Pylab:
         """Функция добавляет график по параметрам"""
         inp = InputManager(*args, **kwargs)
         self.__visitor.visit(inp)
-
