@@ -1,9 +1,9 @@
 from abstract_work import Worker, Visitor
-from matplotlib.pylab import xlabel, ylabel, scatter, plot, legend, savefig, \
-    show
+from matplotlib.pylab import xlabel, ylabel, scatter, plot, legend, savefig, show, errorbar
 
 
 class Plotter(Worker):
+    """Класс, строящий графики"""
     def __init__(self):
         self._x_label = []
         self._y_label = []
@@ -19,15 +19,20 @@ class Plotter(Worker):
             ylabel(self._y_label)
             match current_type:
                 case "scatter":
-                    scatter(self._x_data[i], self._y_data[i],
-                            label=visitor.legends[i])
-
-                    # TODO: дописать различных типов графиков
+                    if visitor.x_error[i] is None and visitor.y_error[i] is None:
+                        scatter(self._x_data[i], self._y_data[i], label=visitor.legends[i])
+                    else:
+                        errorbar(self._x_data[i], self._y_data[i], xerr=visitor.x_error[i],
+                                 yerr=visitor.y_error[i],
+                                 label=visitor.error_labels[i] if visitor.error_labels[
+                                                                      i] is not None else
+                                 visitor.legends[i], fmt='o', capsize=3)
+                    if visitor.types_of_interpolation[i] is not None:
+                        plot(visitor.x_ranges[i], visitor.current_predicted_y_data[
+                            i])
                 case _:
-                    plot(self._x_data[i], self._y_data[i],
-                         legend=visitor.legends[i])
-            if visitor.types_of_interpolation[i] is not None:
-                plot(visitor.x_ranges[i], visitor.current_predicted_y_data[i])
+                    plot(self._x_data[i], self._y_data[i], label=visitor.legends[i])
+
         legend()
         if visitor.file_name_to_write_data:
             savefig(visitor.file_name_to_write_data)

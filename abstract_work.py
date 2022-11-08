@@ -25,6 +25,9 @@ class Visitor:
         self.current_predicted_y_data = []
         self.x_ranges = []
         self.degrees = []
+        self.x_error = []
+        self.y_error = []
+        self.error_labels = []
 
     def visit(self, obj: Worker) -> None:
         obj.accept(self)
@@ -108,3 +111,27 @@ class Visitor:
     @degrees.setter
     def degrees(self, value):
         self._degrees = value
+
+    @property
+    def x_error(self):
+        return self._x_error
+
+    @x_error.setter
+    def x_error(self, value):
+        self._x_error = value
+
+    @property
+    def y_error(self):
+        return self._y_error
+
+    @y_error.setter
+    def y_error(self, value):
+        self._y_error = value
+
+    @property
+    def error_labels(self):
+        return self._error_label
+
+    @error_labels.setter
+    def error_labels(self, value):
+        self._error_label = value
