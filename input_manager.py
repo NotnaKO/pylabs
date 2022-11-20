@@ -1,7 +1,13 @@
+import sys
+import traceback
+
 import numpy
+import systemd.login
+
 from abstract_work import Worker
 from os.path import exists
 from pydantic import validate_arguments
+from contextlib import suppress
 
 
 class InputManager(Worker):
@@ -79,13 +85,19 @@ class InputManager(Worker):
     def read_data(self, *args, input_type: str, input_file_name: str, input_data_type,
                   separator: str, show: bool, **kwargs):
         self._show = show
+        if len(args) == 1 and args[0] == "stdin" or args[0] == ".txt":
+            input_type = args[0]
         match input_type:
             case "stdin":
                 self._x_data = list(map(input_data_type, input("Введите данные по x через "
-                                                               "пробел: \n")))
+                                                               "пробел: \n").split()))
                 self._y_data = list(map(input_data_type, input("Введите данные по у через "
-                                                               "пробел: \n")))
-
+                                                               "пробел: \n").split()))
+                self._x_error = list(map(input_data_type, input("Введите ошибки по x через "
+                                                                "пробел: \n").split()))
+                self._y_error = list(map(input_data_type, input("Введите ошибки по у через "
+                                                                "пробел: \n").split()))
+                self._type = "scatter"
                 self._label = input("Введите название функции(пустую "
                                     "строку, если её нет) \n")
                 if self._label == '':
@@ -103,8 +115,9 @@ class InputManager(Worker):
                     "если её нет) \n")
                 if self._file_name_to_save_figure == '':
                     self._file_name_to_save_figure = None
+                arr = [x for x in self._types_of_interpolations if x is not None] + ['None']
                 s = f"Введите тип интерполяции(возможные типы: " \
-                    f"{', '.join(self._types_of_interpolations)})\n"
+                    f"{', '.join(arr)}\n"
                 self._type_of_interpolation = input(s)
                 if self._type_of_interpolation == "None":
                     self._type_of_interpolation = None
@@ -121,7 +134,7 @@ class InputManager(Worker):
                     self._degree = None
                 self._show = (input("Показывать график?(Да, Нет)\n") == "Да")
                 if input("Хотите написать диапазон для x?(Да, Нет(будет посчитан "
-                         "автоматически))") == "Да":
+                         "автоматически))\n") == "Да":
                     start = float(input("Введите начальный x"))
                     end = float(input("Введите конечный x"))
                     step = float(input("Введите шаг"))
@@ -138,10 +151,13 @@ class InputManager(Worker):
                     cmd, value = i.split(':')
                     self._fill_argument(cmd, value)
             case _:
-                self._x_data = args[0]
-                self._y_data = args[1]
-                for key, value in kwargs.items():
-                    self._fill_argument(key, value)
+                try:
+                    self._x_data = args[0]
+                    self._y_data = args[1]
+                    for key, value in kwargs.items():
+                        self._fill_argument(key, value)
+                except IndexError:
+                    raise ValueError("You use incorrect input")
 
     def accept(self, visitor) -> None:
         x, y = visitor.data
