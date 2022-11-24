@@ -1,13 +1,8 @@
-import sys
-import traceback
-
 import numpy
-import systemd.login
 
 from abstract_work import Worker
 from os.path import exists
 from pydantic import validate_arguments
-from contextlib import suppress
 
 
 class InputManager(Worker):
