@@ -88,6 +88,11 @@ class InputManager(Worker):
                                                                "пробел: \n").split()))
                 self._y_data = list(map(input_data_type, input("Введите данные по у через "
                                                                "пробел: \n").split()))
+                if len(self._x_data) != len(self._y_data):
+                    raise ValueError("y data and x data should have the same length")
+                tmp = list(sorted(((i, j) for i, j in zip(self._x_data, self._y_data))))
+                self._x_data = [i[0] for i in tmp]
+                self._y_data = [i[1] for i in tmp]
                 self._x_error = list(map(input_data_type, input("Введите ошибки по x через "
                                                                 "пробел: \n").split()))
                 self._y_error = list(map(input_data_type, input("Введите ошибки по у через "
@@ -120,6 +125,10 @@ class InputManager(Worker):
                     raise ValueError("Type of interpolation may be only "
                                      "\"any\", \"linear\", \"polynomial\" "
                                      "or None")
+                if self._type_of_interpolation == "any" and len(set(self._x_data)) != len(
+                        self._x_data):
+                    raise ValueError(
+                        "For using any it is necessary that the values are not repeated")
                 if self._type_of_interpolation == "polynomial":
                     self._degree = input("Введите степень полинома для аппроксимации\n")
                     self._degree = int(self._degree)
