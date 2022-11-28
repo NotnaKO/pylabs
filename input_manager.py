@@ -80,7 +80,7 @@ class InputManager(Worker):
     def read_data(self, *args, input_type: str, input_file_name: str, input_data_type,
                   separator: str, show: bool, **kwargs):
         self._show = show
-        if len(args) == 1 and args[0] == "stdin" or args[0] == ".txt":
+        if len(args) == 1 and type(args[0]) == str and (args[0] == "stdin" or args[0] == ".txt"):
             input_type = args[0]
         match input_type:
             case "stdin":
